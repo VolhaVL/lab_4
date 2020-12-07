@@ -96,19 +96,7 @@ public class GraphicsDisplay extends JPanel{
 // Шаг 5 - Чтобы изображение было неискажѐнным - масштаб должен быть одинаков
 // Выбираем за основу минимальный
         scale = Math.min(scaleX, scaleY);
-// Шаг 6 - корректировка границ отображаемой области согласно выбранному масштабу
         if (scale == scaleX) {
-/* Если за основу был взят масштаб по оси X, значит по оси Y
-делений меньше,
-* т.е. подлежащий визуализации диапазон по Y будет меньше
-высоты окна.
-* Значит необходимо добавить делений, сделаем это так:
-* 1) Вычислим, сколько делений влезет по Y при выбранном
-масштабе - getSize().getHeight()/scale
-* 2) Вычтем из этого сколько делений требовалось изначально
-* 3) Набросим по половине недостающего расстояния на maxY и
-minY
-*/
             double yIncrement = (getSize().getHeight() / scale - (maxY - minY)) / 2;
             maxY += yIncrement;
             minY -= yIncrement;
@@ -120,21 +108,14 @@ minY
             maxX += xIncrement;
             minX -= xIncrement;
         }
-// Шаг 7 - Сохранить текущие настройки холста
         Graphics2D canvas = (Graphics2D) g;
         Stroke oldStroke = canvas.getStroke();
         Color oldColor = canvas.getColor();
         Paint oldPaint = canvas.getPaint();
         Font oldFont = canvas.getFont();
-        // Шаг 8 - В нужном порядке вызвать методы отображения элементов графика
-// Порядок вызова методов имеет значение, т.к. предыдущий рисунок будет затираться последующим
-// Первыми (если нужно) отрисовываются оси координат.
         if (showAxis) paintAxis(canvas);
-// Затем отображается сам график
         paintGraphics(canvas);
-// Затем (если нужно) отображаются маркеры точек, по которым строился график.
         if (showMarkers) paintMarkers(canvas);
-// Шаг 9 - Восстановить старые настройки холста
         canvas.setFont(oldFont);
         canvas.setPaint(oldPaint);
         canvas.setColor(oldColor);
@@ -146,12 +127,6 @@ minY
         canvas.setStroke(graphicsStroke);
 // Выбрать цвет линии
         canvas.setColor(Color.ORANGE);
-/* Будем рисовать линию графика как путь, состоящий из множества
-сегментов (GeneralPath)
-* Начало пути устанавливается в первую точку графика, после чего
-прямой соединяется со
-* следующими точками
-*/
         GeneralPath graphics = new GeneralPath();
         for (int i=0; i<graphicsData.length; i++) {
 // Преобразовать значения (x,y) в точку на экране point
@@ -269,10 +244,15 @@ minY
 // Нарисовать подпись к оси X
 // Определить, сколько места понадобится для надписи "x"
             Rectangle2D bounds = axisFont.getStringBounds("x", context);
+            Rectangle2D centerBounds = axisFont.getStringBounds("1", context);
+            Point2D.Double centerLabelPos = xyToPoint(0,1);
             Point2D.Double labelPos = xyToPoint(maxX, 0);
 // Вывести надпись в точке с вычисленными координатами
             canvas.drawString("x", (float)(labelPos.getX() -
                     bounds.getWidth() - 10), (float)(labelPos.getY() + bounds.getY()));
+            canvas.drawString("1", (float)centerLabelPos.getX() + 10,
+                    (float)(centerLabelPos.getY() - centerBounds.getY()));
+            canvas.draw(new Line2D.Double(xyToPoint(-0.05, 1), xyToPoint(0.05, 1)));
         }
     }
     /* Метод-помощник, осуществляющий преобразование координат.
