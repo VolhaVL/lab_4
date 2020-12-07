@@ -15,39 +15,26 @@ import java.awt.geom.Point2D;
 
 public class GraphicsDisplay extends JPanel{
     private Double[][] graphicsData;
-    // Флаговые переменные, задающие правила отображения графика
     private boolean showAxis = true;
     private boolean showMarkers = true;
-    // Границы диапазона пространства, подлежащего отображению
     private double minX;
     private double maxX;
     private double minY;
     private double maxY;
-    // Используемый масштаб отображения
     private double scale;
-    // Различные стили черчения линий
     private BasicStroke graphicsStroke;
     private BasicStroke axisStroke;
     private BasicStroke markerStroke;
-    // Различные шрифты отображения надписей
     private Font axisFont;
     public GraphicsDisplay() {
-        // Цвет заднего фона области отображения - белый
         setBackground(Color.lightGray);
-        // Сконструировать необходимые объекты, используемые в рисовании
-        // Перо для рисования графика
         graphicsStroke = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 10.0f, new float[] { 4, 1, 3, 1, 1}, 0.0f);
-        // Перо для рисования осей координат
         axisStroke = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, null, 0.0f);
-        // Перо для рисования контуров маркеров
         markerStroke = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, null, 0.0f);
-        // Шрифт для подписей осей координат
         axisFont = new Font("Serif", Font.BOLD, 16);
     }
     public void showGraphics(Double[][] graphicsData) {
-        // Сохранить массив точек во внутреннем поле класса
         this.graphicsData = graphicsData;
-        // Запросить перерисовку компонента, т.е. неявно вызвать paintComponent();
         repaint();
     }
     public void setShowAxis(boolean showAxis) {
@@ -58,7 +45,6 @@ public class GraphicsDisplay extends JPanel{
         this.showMarkers = showMarkers;
         repaint();
     }
-    // Метод отображения всего компонента, содержащего график
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         if (graphicsData == null || graphicsData.length == 0) return;
@@ -151,32 +137,23 @@ public class GraphicsDisplay extends JPanel{
         }
     }
     protected void paintAxis(Graphics2D canvas) {
-// Установить особое начертание для осей
         canvas.setStroke(axisStroke);
-// Оси рисуются чѐрным цветом
         canvas.setColor(Color.BLACK);
-// Стрелки заливаются чѐрным цветом
         canvas.setPaint(Color.BLACK);
-// Подписи к координатным осям делаются специальным шрифтом
         canvas.setFont(axisFont);
-// Создать объект контекста отображения текста - для получения характеристик устройства (экрана)
-                FontRenderContext context = canvas.getFontRenderContext();
+        FontRenderContext context = canvas.getFontRenderContext();
         if (minX<=0.0 && maxX>=0.0) {
             canvas.draw(new Line2D.Double(xyToPoint(0, maxY),
                     xyToPoint(0, minY)));
-// Стрелка оси Y
             GeneralPath arrow = new GeneralPath();
-// Установить начальную точку ломаной точно на верхний конец оси Y
             Point2D.Double lineEnd = xyToPoint(0, maxY);
             arrow.moveTo(lineEnd.getX(), lineEnd.getY());
-// Вести левый "скат" стрелки в точку с относительными координатами (5,20)
             arrow.lineTo(arrow.getCurrentPoint().getX()+5,
                     arrow.getCurrentPoint().getY()+20);
-// Вести нижнюю часть стрелки в точку с относительными координатами (-10, 0)
             arrow.lineTo(arrow.getCurrentPoint().getX()-10,
                     arrow.getCurrentPoint().getY());
             arrow.closePath();
-            canvas.draw(arrow); // Нарисовать стрелку
+            canvas.draw(arrow);
             canvas.fill(arrow);
             Rectangle2D bounds = axisFont.getStringBounds("y", context);
             Point2D.Double labelPos = xyToPoint(0, maxY);
@@ -185,29 +162,20 @@ public class GraphicsDisplay extends JPanel{
         }
         if (minY<=0.0 && maxY>=0.0) {
                     canvas.draw(new Line2D.Double(xyToPoint(minX, 0), xyToPoint(maxX, 0)));
-// Стрелка оси X
             GeneralPath arrow = new GeneralPath();
-// Установить начальную точку ломаной точно на правый конец оси X
             Point2D.Double lineEnd = xyToPoint(maxX, 0);
             arrow.moveTo(lineEnd.getX(), lineEnd.getY());
-// Вести верхний "скат" стрелки в точку с относительными координатами (-20,-5)
             arrow.lineTo(arrow.getCurrentPoint().getX()-20,
                     arrow.getCurrentPoint().getY()-5);
-// Вести левую часть стрелки в точку с относительными координатами (0, 10)
             arrow.lineTo(arrow.getCurrentPoint().getX(),
                     arrow.getCurrentPoint().getY()+10);
-// Замкнуть треугольник стрелки
             arrow.closePath();
-            canvas.draw(arrow); // Нарисовать стрелку
+            canvas.draw(arrow);
             canvas.fill(arrow);
-            // Закрасить стрелку
-// Нарисовать подпись к оси X
-// Определить, сколько места понадобится для надписи "x"
             Rectangle2D bounds = axisFont.getStringBounds("x", context);
             Rectangle2D centerBounds = axisFont.getStringBounds("1", context);
             Point2D.Double centerLabelPos = xyToPoint(0,1);
             Point2D.Double labelPos = xyToPoint(maxX, 0);
-// Вывести надпись в точке с вычисленными координатами
             canvas.drawString("x", (float)(labelPos.getX() -
                     bounds.getWidth() - 10), (float)(labelPos.getY() + bounds.getY()));
             canvas.drawString("1", (float)centerLabelPos.getX() + 10,
@@ -215,28 +183,14 @@ public class GraphicsDisplay extends JPanel{
             canvas.draw(new Line2D.Double(xyToPoint(-0.05, 1), xyToPoint(0.05, 1)));
         }
     }
-    /* Метод-помощник, осуществляющий преобразование координат.
-     * Оно необходимо, т.к. верхнему левому углу холста с координатами
-     * (0.0, 0.0) соответствует точка графика с координатами (minX, maxY), где
-     * minX - это самое "левое" значение X, а
-     * maxY - самое "верхнее" значение Y.
-     */
     protected Point2D.Double xyToPoint(double x, double y) {
-// Вычисляем смещение X от самой левой точки (minX)
         double deltaX = x - minX;
-// Вычисляем смещение Y от точки верхней точки (maxY)
         double deltaY = maxY - y;
         return new Point2D.Double(deltaX*scale, deltaY*scale);
     }
-    /* Метод-помощник, возвращающий экземпляр класса Point2D.Double
-     * смещѐнный по отношению к исходному на deltaX, deltaY
-     * К сожалению, стандартного метода, выполняющего такую задачу, нет.
-     */
     protected Point2D.Double shiftPoint(Point2D.Double src, double deltaX,
                                         double deltaY) {
-// Инициализировать новый экземпляр точки
         Point2D.Double dest = new Point2D.Double();
-// Задать еѐ координаты как координаты существующей точки + заданные смещения
         dest.setLocation(src.getX() + deltaX, src.getY() + deltaY);
         return dest;
     }
